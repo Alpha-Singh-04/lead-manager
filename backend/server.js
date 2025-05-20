@@ -4,6 +4,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoute');
 
 // Load env vars
 dotenv.config();
@@ -20,6 +21,7 @@ app.use(cors());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 // Base route
 app.use('/', (req, res) => {

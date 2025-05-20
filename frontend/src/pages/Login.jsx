@@ -17,9 +17,9 @@ export default function Login() {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      if (res.data.user.role === "superadmin") navigate("/dashboard/superadmin");
-      else if (res.data.user.role === "subadmin") navigate("/dashboard/subadmin");
-      else navigate("/dashboard/agent");
+      if (res.data.user.role === "superadmin") navigate("/superadmin");
+      else if (res.data.user.role === "subadmin") navigate("/subadmin");
+      else navigate("/agent");
     } catch (err) {
       alert("Login failed");
     }
