@@ -1,21 +1,27 @@
 const express = require('express');
 const { authMiddleware, roleMiddleware } = require('../middlewares/authMiddleware');
-const { addLead, updateLead, deleteLead, getMyLeads, exportLeads } = require('../controllers/leadController');
+const { addLead, getAllLeads, updateLead, deleteLead, getMyLeads, exportLeads, getDashboardStats } = require('../controllers/leadController');
 const router = express.Router();
 
-// Export leads
-router.get('/export', authMiddleware, exportLeads);
+// Dashboard stats (Accessible by Superadmin, Subadmin, and Agent)
+router.get('/dashboard', authMiddleware, roleMiddleware(['superadmin', 'subadmin', 'agent']), getDashboardStats);
 
-// Create lead
-router.post('/', authMiddleware, roleMiddleware(["super-admin", "sub-admin"]), addLead);
+// Export leads (Accessible by Superadmin and Subadmin)
+router.get('/export', authMiddleware, roleMiddleware(['superadmin', 'subadmin']), exportLeads);
 
-// Update lead
-router.put('/:id', authMiddleware, roleMiddleware(["super-admin", "sub-admin"]), updateLead);
+// Get all leads (Accessible by Superadmin and Subadmin)
+router.get('/', authMiddleware, roleMiddleware(['superadmin', 'subadmin']), getAllLeads);
 
-// Delete lead
-router.delete('/:id', authMiddleware, roleMiddleware(["super-admin", "sub-admin"]), deleteLead);
+// Create lead (Accessible by Superadmin and Subadmin)
+router.post('/', authMiddleware, roleMiddleware(['superadmin', 'subadmin']), addLead);
 
-// Get leads assigned to current user (support agent)
-router.get('/mine', authMiddleware, getMyLeads);
+// Update lead (Accessible by Superadmin and Subadmin)
+router.put('/:id', authMiddleware, roleMiddleware(['superadmin', 'subadmin']), updateLead);
+
+// Delete lead (Accessible by Superadmin and Subadmin)
+router.delete('/:id', authMiddleware, roleMiddleware(['superadmin', 'subadmin']), deleteLead);
+
+// Get leads assigned to current user (Accessible by Agent)
+router.get('/mine', authMiddleware, roleMiddleware(['agent']), getMyLeads);
 
 module.exports = router;

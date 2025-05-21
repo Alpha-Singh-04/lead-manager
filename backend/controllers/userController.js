@@ -20,20 +20,15 @@ const createUser = async(req, res) => {
       });
     }
 
-    // Hash password
-    //const hashedPassword = await bcrypt.hash(password, 10);
-
     // Create new user
     const newUser = new User({
       name,
       email,
-      password,
+      password, // Password will be hashed by the pre-save middleware
       role
     });
 
     // Save user
-    //const newUser = new User({ email, password: hashedPassword, role });
-    // Save user (password will be hashed by the pre-save middleware)
     await newUser.save();
 
     res.status(201).json({ 
@@ -60,7 +55,7 @@ const getAllUsers = async (req, res) => {
     res.status(200).json(users);
   }catch(error){
     res.status(500).json({ 
-      message: 'Server error', error: err.message
+      message: 'Server error', error: error.message
     });
   }
 }

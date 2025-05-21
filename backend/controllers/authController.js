@@ -1,4 +1,3 @@
-
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
@@ -10,15 +9,18 @@ const login = async (req, res) => {
   try {
     // Find the user by email
     const user = await User.findOne({ email });
+    
     if (!user) {
       return res.status(401).json({ message: 'Invalid email' });
     }
 
-    // Compare the password with the hashed password
-    const isMatch = await bcrypt.compare(password, user.password);
+    // Compare the password using the model's method
+    const isMatch = await user.comparePassword(password);
+    
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid password' });
     }
+
     // Generate a JWT token
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: '1h',
@@ -34,14 +36,13 @@ const login = async (req, res) => {
         email: user.email,
         role: user.role,
       },
-    })
+    });
     
-  }catch(error){
-    console.log('Error finding user:', error);
+  } catch (error) {
     return res.status(500).json({
       message: 'Internal server error',
-      error: 'Error finding user',
-    })
+      error: error.message,
+    });
   }
 };
 

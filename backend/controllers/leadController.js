@@ -1,5 +1,6 @@
 const Lead = require('../models/Lead');
 const { Parser } = require('json2csv');
+const User = require('../models/User'); // Import User model to populate assignedTo
 
 const addLead = async(req, res) => {
     try{
@@ -38,6 +39,23 @@ const addLead = async(req, res) => {
         });
     }
 }
+
+const getAllLeads = async (req, res) => {
+    try {
+        // Superadmin and Subadmin can view all leads
+        const leads = await Lead.find()
+            .populate('assignedTo', 'name email')
+            .sort({ createdAt: -1 });
+
+        res.json(leads);
+    } catch (error) {
+        console.error('Error fetching all leads:', error);
+        res.status(500).json({ 
+            message: 'Server error', 
+            error: error.message 
+        });
+    }
+};
 
 const updateLead = async(req, res) => {
     try {
@@ -117,7 +135,7 @@ const getMyLeads = async(req, res) => {
 
         res.json(leads);
     } catch (error) {
-        console.error(error);
+        console.error('Error fetching leads for user ID', req.userId, ':', error);
         res.status(500).json({ 
             message: "Server error", 
             error: error.message 
@@ -137,7 +155,7 @@ const exportLeads = async(req, res) => {
         }
 
         // If user is a support agent, only show their leads
-        if (userRole === 'support-agent') {
+        if (userRole === 'agent') {
             query.assignedTo = req.userId;
         }
 
@@ -173,10 +191,76 @@ const exportLeads = async(req, res) => {
     }
 }
 
+const getDashboardStats = async(req, res) => {
+    try {
+        const userRole = req.user.role;
+        const userId = req.userId;
+
+        // Base query - if support agent, only show their leads
+        const baseQuery = userRole === 'agent' ? { assignedTo: userId } : {};
+
+        // Get total leads count
+        const totalLeads = await Lead.countDocuments(baseQuery);
+
+        // Get leads by status
+        const statusCounts = await Lead.aggregate([
+            { $match: baseQuery },
+            { $group: { _id: '$status', count: { $sum: 1 } } }
+        ]);
+
+        // Get agent performance
+        const agentPerformance = await Lead.aggregate([
+            { $match: baseQuery },
+            { $group: {
+                _id: '$assignedTo',
+                totalLeads: { $sum: 1 },
+                wonLeads: {
+                    $sum: { $cond: [{ $eq: ['$status', 'won'] }, 1, 0] }
+                },
+                newLeads: {
+                    $sum: { $cond: [{ $eq: ['$status', 'new'] }, 1, 0] }
+                }
+            }},
+            { $sort: { totalLeads: -1 } }
+        ]);
+
+        // Populate agent performance with user details
+        await User.populate(agentPerformance, { path: '_id', select: 'name email' });
+
+        // Get recent leads (last 5)
+        const recentLeads = await Lead.find(baseQuery)
+            .populate('assignedTo', 'name email')
+            .sort({ createdAt: -1 })
+            .limit(5);
+
+        // Calculate conversion rate
+        const wonCount = statusCounts.find(s => s._id === 'won')?.count || 0;
+        const conversionRate = totalLeads > 0 
+            ? (wonCount / totalLeads) * 100 
+            : 0;
+
+        res.json({
+            totalLeads,
+            statusCounts,
+            agentPerformance,
+            recentLeads,
+            conversionRate: conversionRate.toFixed(1)
+        });
+    } catch (error) {
+        console.error('Dashboard stats error:', error);
+        res.status(500).json({ 
+            message: "Error fetching dashboard stats", 
+            error: error.message 
+        });
+    }
+}
+
 module.exports = {
     addLead,
+    getAllLeads,
     updateLead,
     deleteLead,
     getMyLeads,
-    exportLeads
-}
+    exportLeads,
+    getDashboardStats
+};

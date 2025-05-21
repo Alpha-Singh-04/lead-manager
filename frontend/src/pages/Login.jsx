@@ -1,13 +1,16 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -18,24 +21,56 @@ export default function Login() {
       const res = await axios.post("http://localhost:5000/api/auth/login", {
         email,
         password,
+        role,
       });
       
-      if (res.data.token) {
-        localStorage.setItem("token", res.data.token);
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-
-        // Navigate based on role - updated paths to match App.jsx routes
-        if (res.data.user.role === "superadmin") {
-          navigate("/superadmin");
-        } else if (res.data.user.role === "subadmin") {
-          navigate("/subadmin");
-        } else {
-          navigate("/agent");
+      if (res.data.token && res.data.user && res.data.user.role) {
+        // Validate role
+        const validRoles = ['superadmin', 'subadmin', 'agent'];
+        if (!validRoles.includes(res.data.user.role)) {
+          setError("Invalid user role. Please contact support.");
+          return;
         }
+
+        // Verify if selected role matches the user's actual role
+        if (res.data.user.role !== role) {
+          setError("Selected role does not match your account role.");
+          return;
+        }
+
+        // Store token in localStorage
+        localStorage.setItem("token", res.data.token);
+        
+        // Update auth context with user data
+        login(res.data.user);
+
+        // Navigate based on role with strict checking
+        switch (res.data.user.role) {
+          case 'superadmin':
+            navigate("/superadmin");
+            break;
+          case 'subadmin':
+            navigate("/subadmin");
+            break;
+          case 'agent':
+            navigate("/agent");
+            break;
+          default:
+            setError("Invalid role. Please contact support.");
+            break;
+        }
+      } else {
+        setError("Invalid response from server. Please try again.");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed. Please try again.");
-      console.error("Login error:", err);
+      // Handle specific error cases
+      if (err.response?.status === 401) {
+        setError("Invalid email or password");
+      } else if (err.response?.status === 403) {
+        setError("Access denied. Please check your role permissions.");
+      } else {
+        setError(err.response?.data?.message || "Login failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -66,7 +101,7 @@ export default function Login() {
         />
       </div>
       
-      <div className="mb-6">
+      <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
           Password
         </label>
@@ -79,6 +114,24 @@ export default function Login() {
           className="border w-full p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         />
+      </div>
+
+      <div className="mb-6">
+        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="role">
+          Role
+        </label>
+        <select
+          id="role"
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          className="border w-full p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        >
+          <option value="">Select your role</option>
+          <option value="superadmin">Super Admin</option>
+          <option value="subadmin">Sub Admin</option>
+          <option value="agent">Support Agent</option>
+        </select>
       </div>
       
       <button
