@@ -1,5 +1,6 @@
 const Lead = require('../models/Lead');
 const { Parser } = require('json2csv');
+const ExcelJS = require("exceljs");
 const User = require('../models/User'); // Import User model to populate assignedTo
 
 const addLead = async(req, res) => {
@@ -191,6 +192,30 @@ const exportLeads = async(req, res) => {
     }
 }
 
+const importLeads = async (req, res) => {
+    try {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(req.file.buffer);
+        const worksheet = workbook.worksheets[0];
+
+        const rows = [];
+        worksheet.eachRow((row, rowNumber) => {
+          rows.push(row.values.slice(1)); // remove empty 1st column
+    });
+
+    const columns = rows.length > 0 ? rows[0] : [];
+    const dataRows = rows.slice(1); // exclude header
+
+    res.json({
+        columns,
+        rows: dataRows,
+    });
+    } catch (error) {
+        console.error("ExcelJS parsing error:", error);
+        res.status(500).json({ message: "Failed to parse Excel file." });
+    }
+};
+
 const getDashboardStats = async(req, res) => {
     try {
         const userRole = req.user.role;
@@ -262,5 +287,6 @@ module.exports = {
     deleteLead,
     getMyLeads,
     exportLeads,
+    importLeads,
     getDashboardStats
 };

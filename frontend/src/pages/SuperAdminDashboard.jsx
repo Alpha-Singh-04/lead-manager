@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import UserManagement from "./UserManagement";
 import LeadManagement from "./LeadManagement";
+import ExcelUpload from "../components/ExcelUpload";
 
 const SuperAdminDashboard = () => {
   const [formData, setFormData] = useState({
@@ -245,6 +246,11 @@ const SuperAdminDashboard = () => {
           <div className="bg-white p-6 rounded-lg shadow-md">
             <UserManagement />
           </div>
+        </div>
+
+        <div>
+          <h2 className="text-xl font-bold mb-4">Excel Upload</h2>
+          <ExcelUpload />
         </div>
 
         {/* Lead Management Table */}
