@@ -25,11 +25,26 @@ function safeUse(app, path, ...handlers) {
 
 // Middleware
 app.use(express.json());
+
+const allowedOrigins = [
+  'https://lead-manager-tdjs.vercel.app',
+  'http://localhost:5173',
+  'https://lead-manager-3mu2fxk0a-shobhit0407-gmailcoms-projects.vercel.app', 
+];
+
 app.use(cors({
-  origin: ['https://lead-manager-tdjs.vercel.app',
-    'http://localhost:5173',
-    'https://lead-manager-3mu2fxk0a-shobhit0407-gmailcoms-projects.vercel.app'],
-  credentials: true
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (
+      allowedOrigins.includes(origin) ||
+      /\.vercel\.app$/.test(origin) // Allow all Vercel preview URLs
+    ) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
 }));
 
 // Routes
