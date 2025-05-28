@@ -19,6 +19,8 @@ const ExcelUpload = () => {
     const formData = new FormData();
     formData.append("file", file);
 
+    const token = localStorage.getItem("token");
+
     try {
       const res = await fetch("http://localhost:5000/api/leads/import", {
         headers: { Authorization: `Bearer ${token}` },
