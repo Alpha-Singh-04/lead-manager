@@ -17,7 +17,7 @@ assignedTo: "",
 const [agents, setAgents] = useState([]);
 
 useEffect(() => {
-    axios.get("/api/users?role=support-agent", {
+    axios.get((import.meta.env.VITE_API_URL || "http://localhost:5000") + "/api/users?role=support-agent", {
     headers: {
     Authorization: `Bearer ${localStorage.getItem("token")}`
     },
@@ -35,7 +35,7 @@ const handleSubmit = async (e) => {
     };
 
     try {
-    await axios.post("/api/leads", body, {
+    await axios.post((import.meta.env.VITE_API_URL || "http://localhost:5000") + "/api/leads", body, {
         headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         },

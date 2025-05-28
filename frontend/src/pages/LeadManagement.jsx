@@ -21,7 +21,7 @@ const LeadManagement = ({ currentUserRole }) => {
     try {
       setLoading(true);
       setError('');
-      const res = await axios.get(`http://localhost:5000${endpoint}`, {
+      const res = await axios.get((import.meta.env.VITE_API_URL || "http://localhost:5000") + endpoint, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setLeads(Array.isArray(res.data) ? res.data : []);
@@ -35,7 +35,7 @@ const LeadManagement = ({ currentUserRole }) => {
 
   const fetchAgents = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/users?role=agent', {
+      const res = await axios.get((import.meta.env.VITE_API_URL || "http://localhost:5000") + "/api/users?role=agent", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAgents(res.data || []);
@@ -49,7 +49,7 @@ const LeadManagement = ({ currentUserRole }) => {
       setError('');
       const exportEndpoint = currentUserRole === 'agent' ? `/api/leads/export?status=${filter}&assignedToMine=true` : `/api/leads/export?status=${filter}`;
       
-      const res = await axios.get(`http://localhost:5000${exportEndpoint}`, {
+      const res = await axios.get((import.meta.env.VITE_API_URL || "http://localhost:5000") + exportEndpoint, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
       });
@@ -81,7 +81,7 @@ const LeadManagement = ({ currentUserRole }) => {
   const updateLeadStatus = async (leadId, newStatus) => {
     try {
       setError('');
-      await axios.put(`http://localhost:5000/api/leads/${leadId}`, 
+      await axios.put((import.meta.env.VITE_API_URL || "http://localhost:5000") + `/api/leads/${leadId}`, 
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` }}
       );
@@ -97,7 +97,7 @@ const LeadManagement = ({ currentUserRole }) => {
     
     try {
       setError('');
-      await axios.delete(`http://localhost:5000/api/leads/${leadId}`, {
+      await axios.delete((import.meta.env.VITE_API_URL || "http://localhost:5000") + `/api/leads/${leadId}`, {
         headers: { Authorization: `Bearer ${token}` }}
       );
       fetchLeads();
@@ -127,7 +127,7 @@ const LeadManagement = ({ currentUserRole }) => {
         notes: editForm.notes.split('\n').filter(note => note.trim())
       };
 
-      await axios.put(`http://localhost:5000/api/leads/${editLead._id}`, updatedData, {
+      await axios.put((import.meta.env.VITE_API_URL || "http://localhost:5000") + `/api/leads/${editLead._id}`, updatedData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
