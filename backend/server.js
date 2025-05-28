@@ -15,6 +15,14 @@ connectDB();
 // Create app
 const app = express();
 
+function safeUse(app, path, ...handlers) {
+  if (typeof path !== 'string' || path.trim() === '' || /^:/.test(path) || /:\s*$/.test(path)) {
+    throw new Error(`Malformed route path detected: '${path}'`);
+  }
+  console.log('Registering route:', path);
+  app.use(path, ...handlers);
+}
+
 // Middleware
 app.use(express.json());
 app.use(cors({
@@ -23,9 +31,9 @@ app.use(cors({
 }));
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/leads', leadRoute)
+safeUse(app, '/api/auth', authRoutes);
+safeUse(app, '/api/users', userRoutes);
+safeUse(app, '/api/leads', leadRoute);
 
 // Base route
 app.use('*', (req, res) => {
