@@ -22,6 +22,8 @@ export default function Login() {
         email,
         password,
         role,
+      },{
+          headers: { "Content-Type": "application/json" }
       });
       
       if (res.data.token && res.data.user && res.data.user.role) {

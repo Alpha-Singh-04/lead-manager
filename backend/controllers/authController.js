@@ -4,11 +4,15 @@ const User = require('../models/User');
 
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, role } = req.body;
 
   try {
     // Find the user by email
     const user = await User.findOne({ email });
+
+    if(user.role !== role){
+      return res.status(401).json({ message: 'Invalid role' });
+    }
     
     if (!user) {
       return res.status(401).json({ message: 'Invalid email' });

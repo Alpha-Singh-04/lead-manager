@@ -28,7 +28,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/leads', leadRoute)
 
 // Base route
-app.use('/', (req, res) => {
+app.use('*', (req, res) => {
   res.send('Hello from the backend!');
 });
 
