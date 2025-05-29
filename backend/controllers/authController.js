@@ -9,13 +9,13 @@ const login = async (req, res) => {
   try {
     // Find the user by email
     const user = await User.findOne({ email });
-
-    if(user.role !== role){
-      return res.status(401).json({ message: 'Invalid role' });
-    }
     
     if (!user) {
       return res.status(401).json({ message: 'Invalid email' });
+    }
+
+    if(user.role !== role){
+      return res.status(401).json({ message: 'Invalid role' });
     }
 
     // Compare the password using the model's method
@@ -43,6 +43,7 @@ const login = async (req, res) => {
     });
     
   } catch (error) {
+    console.error('Login error:', error);
     return res.status(500).json({
       message: 'Internal server error',
       error: error.message,

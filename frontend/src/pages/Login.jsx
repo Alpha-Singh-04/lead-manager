@@ -22,52 +22,57 @@ export default function Login() {
         email,
         password,
         role,
-      },{
-          headers: { "Content-Type": "application/json" }
+      }, {
+        headers: { "Content-Type": "application/json" },
+        timeout: 10000
       });
       
-      if (res.data.token && res.data.user && res.data.user.role) {
-        // Validate role
-        const validRoles = ['superadmin', 'subadmin', 'agent'];
-        if (!validRoles.includes(res.data.user.role)) {
-          setError("Invalid user role. Please contact support.");
-          return;
-        }
-
-        // Verify if selected role matches the user's actual role
-        if (res.data.user.role !== role) {
-          setError("Selected role does not match your account role.");
-          return;
-        }
-
-        // Store token in localStorage
-        localStorage.setItem("token", res.data.token);
-        
-        // Update auth context with user data
-        login(res.data.user);
-
-        // Navigate based on role with strict checking
-        switch (res.data.user.role) {
-          case 'superadmin':
-            navigate("/superadmin");
-            break;
-          case 'subadmin':
-            navigate("/subadmin");
-            break;
-          case 'agent':
-            navigate("/agent");
-            break;
-          default:
-            setError("Invalid role. Please contact support.");
-            break;
-        }
-      } else {
+      if (!res.data || !res.data.token || !res.data.user) {
         setError("Invalid response from server. Please try again.");
+        return;
+      }
+
+      // Validate role
+      const validRoles = ['superadmin', 'subadmin', 'agent'];
+      if (!validRoles.includes(res.data.user.role)) {
+        setError("Invalid user role. Please contact support.");
+        return;
+      }
+
+      // Verify if selected role matches the user's actual role
+      if (res.data.user.role !== role) {
+        setError("Selected role does not match your account role.");
+        return;
+      }
+
+      // Store token in localStorage
+      localStorage.setItem("token", res.data.token);
+      
+      // Update auth context with user data
+      const loginResult = login(res.data.user);
+      if (!loginResult.success) {
+        setError("Failed to update authentication state. Please try again.");
+        return;
+      }
+
+      // Navigate based on role with strict checking
+      const rolePath = {
+        'superadmin': '/superadmin',
+        'subadmin': '/subadmin',
+        'agent': '/agent'
+      }[res.data.user.role];
+
+      if (rolePath) {
+        navigate(rolePath, { replace: true });
+      } else {
+        setError("Invalid role. Please contact support.");
       }
     } catch (err) {
-      // Handle specific error cases
-      if (err.response?.status === 401) {
-        setError("Invalid email or password");
+      console.error('Login error:', err);
+      if (err.code === 'ECONNABORTED') {
+        setError("Request timed out. Please try again.");
+      } else if (err.response?.status === 401) {
+        setError(err.response.data.message || "Invalid email or password");
       } else if (err.response?.status === 403) {
         setError("Access denied. Please check your role permissions.");
       } else {

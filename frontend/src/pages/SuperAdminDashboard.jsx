@@ -125,7 +125,7 @@ const SuperAdminDashboard = () => {
                 </thead>
                 <tbody>
                   {dashboardStats.agentPerformance.map((agent) => (
-                    <tr key={agent._id} className="border-t">
+                    <tr key={agent._id ? agent._id._id || agent._id.email : 'unassigned'} className="border-t">
                       <td className="px-4 py-2">{agent._id ? agent._id.name || agent._id.email || 'Unassigned' : 'Unassigned'}</td>
                       <td className="px-4 py-2">{agent.totalLeads}</td>
                       <td className="px-4 py-2">{agent.wonLeads}</td>
@@ -158,7 +158,7 @@ const SuperAdminDashboard = () => {
                 </thead>
                 <tbody>
                   {dashboardStats.recentLeads.map((lead) => (
-                    <tr key={lead._id} className="border-t">
+                    <tr key={lead._id || `lead-${lead.email}-${lead.createdAt}`} className="border-t">
                       <td className="px-4 py-2">{lead.name}</td>
                       <td className="px-4 py-2">{lead.email}</td>
                       <td className="px-4 py-2">{lead.status}</td>

@@ -17,11 +17,13 @@ const LeadManagement = ({ currentUserRole }) => {
 
   const fetchLeads = async () => {
     const endpoint = currentUserRole === 'agent' ? '/api/leads/mine' : '/api/leads';
+    const fullUrl = (import.meta.env.VITE_API_URL || "http://localhost:5000") + endpoint;
+    console.log('Debug Frontend: Fetching leads from full URL:', fullUrl);
 
     try {
       setLoading(true);
       setError('');
-      const res = await axios.get((import.meta.env.VITE_API_URL || "http://localhost:5000") + endpoint, {
+      const res = await axios.get(fullUrl, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setLeads(Array.isArray(res.data) ? res.data : []);
@@ -70,6 +72,7 @@ const LeadManagement = ({ currentUserRole }) => {
   };
 
   useEffect(() => {
+    console.log('Debug Frontend: currentUserRole changed to:', currentUserRole);
     if (currentUserRole) {
         fetchLeads();
         if (currentUserRole === 'superadmin' || currentUserRole === 'subadmin') {
@@ -77,6 +80,17 @@ const LeadManagement = ({ currentUserRole }) => {
         }
     }
   }, [currentUserRole]);
+
+  // Debug: Log agent's user ID and assignedTo fields for leads
+  useEffect(() => {
+    if (currentUserRole === 'agent') {
+      const user = JSON.parse(localStorage.getItem('user'));
+      console.log('Agent userId:', user?.id);
+      leads.forEach(lead => {
+        console.log('Lead assignedTo:', lead.assignedTo?._id || lead.assignedTo);
+      });
+    }
+  }, [leads, currentUserRole]);
 
   const updateLeadStatus = async (leadId, newStatus) => {
     try {
@@ -161,6 +175,15 @@ const LeadManagement = ({ currentUserRole }) => {
     return (
       <div className="p-4 text-center text-gray-600">
         <p>Loading leads...</p>
+      </div>
+    );
+  }
+
+  // Show a message if agent has no leads
+  if (currentUserRole === 'agent' && leads.length === 0) {
+    return (
+      <div className="p-4 text-center text-gray-600">
+        <p>No leads assigned to you yet.</p>
       </div>
     );
   }

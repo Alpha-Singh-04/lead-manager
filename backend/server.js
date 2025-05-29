@@ -27,9 +27,8 @@ function safeUse(app, path, ...handlers) {
 app.use(express.json());
 
 const allowedOrigins = [
-  'https://lead-manager-tdjs.vercel.app',
   'http://localhost:5173',
-  'https://lead-manager-3mu2fxk0a-shobhit0407-gmailcoms-projects.vercel.app', 
+  'https://lead-manager-tdjs.vercel.app', 
 ];
 
 app.use(cors({
@@ -48,14 +47,11 @@ app.use(cors({
 }));
 
 // Routes
+console.log('Debug Backend: Setting up Lead Routes');
 safeUse(app, '/api/auth', authRoutes);
 safeUse(app, '/api/users', userRoutes);
 safeUse(app, '/api/leads', leadRoute);
 
-// Base route
-app.use('*', (req, res) => {
-  res.send('Hello from the backend!');
-});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -64,6 +60,11 @@ app.use((err, req, res, next) => {
     message: "Internal server error",
     error: err.message
   });
+});
+
+// Base route - Moved to the very end
+app.use('*', (req, res) => {
+  res.send('Hello from the backend!');
 });
 
 // Start server

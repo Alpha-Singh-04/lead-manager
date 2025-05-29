@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Lead = require('../models/Lead');
 const { Parser } = require('json2csv');
 const ExcelJS = require("exceljs");
@@ -129,10 +130,13 @@ const deleteLead = async(req, res) => {
 
 const getMyLeads = async(req, res) => {
     try {
+        console.log('Debug: req.userId in getMyLeads:', req.userId);
         // Find all leads assigned to the current user
-        const leads = await Lead.find({ assignedTo: req.userId })
+        const leads = await Lead.find({ assignedTo: new mongoose.Types.ObjectId(req.userId) })
             .populate('assignedTo', 'name email')
             .sort({ createdAt: -1 });
+
+        console.log('Debug: Leads found:', leads.length);
 
         res.json(leads);
     } catch (error) {
